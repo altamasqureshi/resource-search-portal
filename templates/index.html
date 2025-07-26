@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resource Search Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fadeIn {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+
+        /* Animated Gradient Background */
+        @keyframes gradientAnimation {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        body {
+            background: linear-gradient(270deg, #a7f3d0, #bfdbfe, #c7d2fe, #fbcfe8);
+            background-size: 400% 400%;
+            animation: gradientAnimation 15s ease infinite;
+        }
+
+        /* Glassmorphism Effect */
+        .glass-container {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px); /* Safari support */
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        }
+
+        .search-input {
+            background: rgba(255, 255, 255, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            color: #333;
+        }
+        .search-input::placeholder {
+            color: rgba(51, 51, 51, 0.7);
+        }
+        .search-input:focus {
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5); /* blue-500 with opacity */
+            border-color: #3b82f6; /* blue-500 */
+        }
+        .search-button {
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            background: rgba(59, 130, 246, 0.8); /* blue-500 with opacity */
+        }
+        .search-button:hover {
+            background: rgba(59, 130, 246, 1); /* blue-500 solid */
+            transform: translateY(-2px);
+        }
+        .copy-btn.bg-green-500:hover {
+            background: rgba(34, 197, 94, 1);
+        }
+        .copy-btn {
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            background: rgba(191, 219, 254, 0.7); /* blue-200 with opacity */
+            color: #1e40af; /* blue-800 */
+        }
+        .copy-btn:hover {
+            transform: translateY(-1px);
+        }
+        .copy-btn.bg-green-500 {
+            background: rgba(34, 197, 94, 0.8);
+        }
+        .copy-btn.bg-green-500:hover {
+            background: rgba(34, 197, 94, 1);
+        }
+        table th, table td {
+            background: rgba(255, 255, 255, 0.1); /* Slightly transparent table cells */
+        }
+        table thead th {
+            background: rgba(255, 255, 255, 0.2); /* Slightly more transparent header */
+        }
+        table tbody tr:hover {
+            background: rgba(255, 255, 255, 0.3); /* Hover effect */
+        }
+        .link-input {
+            background: rgba(255, 255, 255, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            color: #333;
+        }
+        .link-input::placeholder {
+            color: rgba(51, 51, 51, 0.7);
+        }
+        .link-input:focus {
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5); /* blue-500 with opacity */
+            border-color: #3b82f6; /* blue-500 */
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center">
+    <div class="container mx-auto p-8 rounded-xl max-w-5xl w-full transform transition-all duration-300 glass-container">
+        <h1 class="text-4xl font-extrabold mb-10 text-center text-gray-800 tracking-tight">
+            Resource Search Portal
+        </h1>
+
+        <form method="post" class="mb-10">
+            <div class="flex justify-center shadow-lg rounded-lg overflow-hidden">
+                <input type="text" name="query" placeholder="Enter resource name or keyword..."
+                       class="search-input w-full px-5 py-3 text-lg border-none focus:outline-none focus:ring-0 rounded-l-lg"
+                       value="{{ request.form['query'] if request.form else '' }}">
+                <button type="submit"
+                        class="search-button px-8 py-3 text-white font-bold text-lg rounded-r-lg
+                               hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    Search
+                </button>
+            </div>
+        </form>
+
+        {% if results %}
+            <div class="rounded-lg overflow-hidden border border-white border-opacity-30 animate-fadeIn mb-10">
+                <table class="min-w-full divide-y divide-white divide-opacity-30">
+                    <thead class="">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                Name
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                Type
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                Link
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                Copy Link
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-white divide-opacity-20">
+                        {% for result in results %}
+                            <tr class="transition-colors duration-150">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                    {{ result.name }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                                    {{ result.type }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-blue-700">
+                                    <a href="{{ result.link }}" target="_blank" class="hover:underline">View</a>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <div class="flex items-center space-x-2">
+                                        <input type="text" value="{{ result.link }}" readonly
+                                               class="link-input flex-grow px-2 py-1 text-xs border rounded-md bg-gray-100 text-gray-700 overflow-hidden whitespace-nowrap overflow-ellipsis"
+                                               onclick="this.select(); document.execCommand('copy');">
+                                        <button class="copy-btn font-semibold py-2 px-4 rounded-full text-xs shadow-sm">
+                                            Copy
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% elif request.method == 'POST' %}
+            <p class="text-center text-gray-700 text-lg py-8">No results found. Try a different search term.</p>
+        {% endif %}
+
+        <h2 class="text-2xl font-bold mb-6 text-center text-gray-800">Contribute New Data</h2>
+        <form action="/submit" method="post" class="glass-container p-6 rounded-lg shadow-lg">
+            <div class="mb-4">
+                <label for="item_name" class="block text-gray-700 text-sm font-bold mb-2">Name (Model Number / Document Name):</label>
+                <input type="text" id="item_name" name="item_name" required
+                       class="search-input w-full px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div class="mb-4">
+                <label for="item_link" class="block text-gray-700 text-sm font-bold mb-2">Link (URL):</label>
+                <input type="url" id="item_link" name="item_link" required
+                       class="search-input w-full px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div class="mb-6">
+                <label for="item_type" class="block text-gray-700 text-sm font-bold mb-2">Type:</label>
+                <select id="item_type" name="item_type" required
+                        class="search-input w-full px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="Printer Driver">Printer Driver</option>
+                    <option value="Information Document">Information Document</option>
+                    <option value="Google Sheet">Google Sheet</option>
+                </select>
+            </div>
+            <div class="text-center">
+                <button type="submit"
+                        class="search-button px-6 py-3 text-white font-bold rounded-lg
+                               hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    Submit New Entry
+                </button>
+            </div>
+        </form>
+
+    </div>
+
+    <script>
+        document.querySelectorAll('.copy-btn').forEach(button => {
+            button.addEventListener('click', () => {
+                const link = button.closest('tr').querySelector('.link-input').value; // Get link from the new input field
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(link).then(() => {
+                    const originalText = button.textContent;
+                    button.textContent = 'Copied!';
+                    button.classList.add('bg-green-500', 'text-white', 'hover:bg-green-600');
+                    button.classList.remove('bg-blue-100', 'text-blue-800', 'hover:bg-blue-200');
+
+                    setTimeout(() => {
+                        button.textContent = originalText;
+                        button.classList.remove('bg-green-500', 'text-white', 'hover:bg-green-600');
+                        button.classList.add('bg-blue-100', 'text-blue-800', 'hover:bg-blue-200');
+                    }, 2000);
+                }).catch(err => {
+                    console.error('Failed to copy: ', err);
+                });
+            } else {
+                // Fallback for browsers that don't support navigator.clipboard
+                const textarea = document.createElement('textarea');
+                textarea.value = link;
+                textarea.style.position = 'fixed'; // Prevent scrolling to bottom of page in iOS.
+                textarea.style.opacity = '0'; // Hide the textarea
+                document.body.appendChild(textarea);
+                textarea.focus();
+                textarea.select();
+                try {
+                    document.execCommand('copy');
+                    const originalText = button.textContent;
+                    button.textContent = 'Copied!';
+                    button.classList.add('bg-green-500', 'text-white', 'hover:bg-green-600');
+                    button.classList.remove('bg-blue-100', 'text-blue-800', 'hover:bg-blue-200');
+
+                    setTimeout(() => {
+                        button.textContent = originalText;
+                        button.classList.remove('bg-green-500', 'text-white', 'hover:bg-green-600');
+                        button.classList.add('bg-blue-100', 'text-blue-800', 'hover:bg-blue-200');
+                    }, 2000);
+                } catch (err) {
+                    console.error('Fallback: Oops, unable to copy', err);
+                }
+                document.body.removeChild(textarea);
+            }
+            });
+        });
+
+        // Retain search query in input field after submission
+        document.addEventListener('DOMContentLoaded', () => {
+            const queryInput = document.querySelector('input[name="query"]');
+            if (queryInput && window.history.replaceState) {
+                window.history.replaceState(null, null, window.location.pathname);
+            }
+        });
+    </script>
+</body>
+</html>
