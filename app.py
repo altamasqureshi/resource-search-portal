@@ -19,7 +19,9 @@ def search_items(query):
         next(reader)  # Skip header row
         for row in reader:
             item_name = row[0]
-            if fuzz.partial_ratio(query.lower(), item_name.lower()) >= 70:
+            token_set_score = fuzz.token_set_ratio(query.lower(), item_name.lower())
+            partial_score = fuzz.partial_ratio(query.lower(), item_name.lower())
+            if max(token_set_score, partial_score) >= 70:
                 results.append({'name': row[0], 'link': row[1], 'type': 'Printer Driver'})
 
     # Search in info_links.csv
@@ -28,7 +30,9 @@ def search_items(query):
         next(reader)  # Skip header row
         for row in reader:
             item_name = row[0]
-            if fuzz.partial_ratio(query.lower(), item_name.lower()) >= 70:
+            token_set_score = fuzz.token_set_ratio(query.lower(), item_name.lower())
+            partial_score = fuzz.partial_ratio(query.lower(), item_name.lower())
+            if max(token_set_score, partial_score) >= 70:
                 results.append({'name': row[0], 'link': row[1], 'type': row[2]})
     return results
 
