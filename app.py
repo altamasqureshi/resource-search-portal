@@ -2,7 +2,7 @@ import csv
 from flask import Flask, render_template, request, redirect, url_for, flash
 from fuzzywuzzy import fuzz
 from datetime import datetime
-from fuzzywuzzy import fuzz
+from apscheduler.schedulers.background import BackgroundScheduler # New import
 
 from logger import setup_logging
 
@@ -11,29 +11,49 @@ app.secret_key = 'your_super_secret_key' # Replace with a strong, random key in 
 
 logger = setup_logging()
 
-def search_items(query):
-    results = []
-    # Search in drivers.csv
+all_drivers = []
+all_info_links = []
+
+def reload_data(): # New function for scheduled reload
+    global all_drivers, all_info_links
+    all_drivers = []
+    all_info_links = []
     with open('drivers.csv', 'r') as file:
         reader = csv.reader(file)
         next(reader)  # Skip header row
         for row in reader:
-            item_name = row[0]
-            token_set_score = fuzz.token_set_ratio(query.lower(), item_name.lower())
-            partial_score = fuzz.partial_ratio(query.lower(), item_name.lower())
-            if max(token_set_score, partial_score) >= 70:
-                results.append({'name': row[0], 'link': row[1], 'type': 'Printer Driver'})
+            all_drivers.append({'name': row[0], 'link': row[1], 'type': 'Printer Driver'})
 
-    # Search in info_links.csv
     with open('info_links.csv', 'r') as file:
         reader = csv.reader(file)
         next(reader)  # Skip header row
         for row in reader:
-            item_name = row[0]
-            token_set_score = fuzz.token_set_ratio(query.lower(), item_name.lower())
-            partial_score = fuzz.partial_ratio(query.lower(), item_name.lower())
-            if max(token_set_score, partial_score) >= 70:
-                results.append({'name': row[0], 'link': row[1], 'type': row[2]})
+            all_info_links.append({'name': row[0], 'link': row[1], 'type': row[2]})
+    logger.info("CSV data reloaded successfully.")
+
+def load_data(): # Modified to call reload_data
+    reload_data()
+
+load_data() # Initial load
+
+# Setup scheduler
+scheduler = BackgroundScheduler()
+scheduler.add_job(func=reload_data, trigger='cron', hour=4) # Schedule for 4 AM daily
+scheduler.start()
+
+def search_items(query):
+    results = []
+    # Search in all_drivers (in-memory)
+    for item in all_drivers:
+        item_name = item['name']
+        if max(fuzz.token_set_ratio(query.lower(), item_name.lower()), fuzz.partial_ratio(query.lower(), item_name.lower())) >= 70:
+            results.append(item)
+
+    # Search in all_info_links (in-memory)
+    for item in all_info_links:
+        item_name = item['name']
+        if max(fuzz.token_set_ratio(query.lower(), item_name.lower()), fuzz.partial_ratio(query.lower(), item_name.lower())) >= 70:
+            results.append(item)
     return results
 
 @app.route('/', methods=['GET', 'POST'])
