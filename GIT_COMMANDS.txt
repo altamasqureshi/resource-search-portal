@@ -1,0 +1,39 @@
+# Quick Git Commands Reference
+
+## First Time Setup (Run Once)
+git config --global user.name "Your Name"
+git config --global user.email "your.email@example.com"
+
+## Initialize Repository (Run Once in Project Folder)
+git init
+git add .
+git commit -m "Initial commit: Driver search app"
+
+## Connect to GitHub (Run Once - Replace YOUR_USERNAME)
+git remote add origin https://github.com/YOUR_USERNAME/driver-search-app.git
+git branch -M main
+git push -u origin main
+
+## Daily Workflow (Every Time You Make Changes)
+git status                                    # See what changed
+git add .                                     # Add all changes
+git commit -m "Description of changes"        # Save changes locally
+git push                                      # Upload to GitHub (triggers Vercel deploy)
+
+## Useful Commands
+git log                                       # View commit history
+git pull                                      # Download latest changes
+git remote -v                                 # View GitHub connection
+
+## If You Need to Undo
+git restore filename.py                       # Undo changes to a file (before commit)
+git reset HEAD~1                              # Undo last commit (keep changes)
+git reset --hard HEAD~1                       # Undo last commit (delete changes)
+
+## Branch Management
+git checkout -b feature-name                  # Create new branch
+git checkout main                             # Switch to main branch
+git merge feature-name                        # Merge branch into current branch
+
+---
+REMEMBER: After 'git push', Vercel automatically deploys your changes!

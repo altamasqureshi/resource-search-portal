@@ -1,0 +1,10 @@
+__pycache__
+*.pyc
+*.pyo
+*.log
+logs/
+.git/
+python.zip
+python
+*.bat
+test_connection.py
