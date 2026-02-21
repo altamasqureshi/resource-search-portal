@@ -21,8 +21,16 @@ def initialize_sheets():
     """Initialize Google Sheets connection"""
     global sheets_helper
     try:
-        sheets_helper = GoogleSheetsHelper(config.CREDENTIALS_FILE)
-        logger.info("Google Sheets helper initialized successfully")
+        # Try to use environment variable first (for Vercel)
+        if config.GOOGLE_CREDENTIALS_JSON:
+            import json
+            creds_dict = json.loads(config.GOOGLE_CREDENTIALS_JSON)
+            sheets_helper = GoogleSheetsHelper(credentials_json=creds_dict)
+            logger.info("Google Sheets helper initialized with environment credentials")
+        else:
+            # Fall back to credentials file (for local development)
+            sheets_helper = GoogleSheetsHelper(config.CREDENTIALS_FILE)
+            logger.info("Google Sheets helper initialized with credentials file")
     except Exception as e:
         logger.error(f"Failed to initialize Google Sheets: {e}")
         sheets_helper = None

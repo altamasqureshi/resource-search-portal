@@ -15,4 +15,8 @@ INFO_LINKS_SHEET_NAME = 'info_links'
 NEW_SUBMISSIONS_SHEET_NAME = 'new_submissions'
 
 # Service account credentials file
+import os
 CREDENTIALS_FILE = 'credentials.json'
+
+# For Vercel deployment, use environment variable
+GOOGLE_CREDENTIALS_JSON = os.environ.get('GOOGLE_CREDENTIALS_JSON')
