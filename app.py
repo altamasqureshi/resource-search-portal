@@ -16,6 +16,22 @@ logger = setup_logging()
 all_drivers = []
 all_info_links = []
 sheets_helper = None
+_initialized = False
+
+def initialize_app():
+    """Lazy initialization - only runs on first request"""
+    global _initialized
+    if _initialized:
+        return
+    
+    try:
+        initialize_sheets()
+        load_data()
+        _initialized = True
+        logger.info("App initialized successfully")
+    except Exception as e:
+        logger.error(f"Error during app initialization: {e}")
+        # Don't set _initialized to True so it can retry
 
 def initialize_sheets():
     """Initialize Google Sheets connection"""
@@ -79,9 +95,9 @@ def load_data():
     """Initial data load"""
     reload_data()
 
-# Initialize Google Sheets and load data
-initialize_sheets()
-load_data()
+# Remove module-level initialization - will be done lazily on first request
+# initialize_sheets()
+# load_data()
 
 # Setup scheduler (disabled for Vercel serverless environment)
 # Note: Background schedulers don't work in serverless environments
@@ -107,6 +123,7 @@ def search_items(query):
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
+    initialize_app()  # Lazy initialization
     results = []
     if request.method == 'POST':
         query = request.form['query']
@@ -116,6 +133,7 @@ def index():
 
 @app.route('/submit', methods=['POST'])
 def submit():
+    initialize_app()  # Lazy initialization
     item_name = request.form['item_name']
     item_link = request.form['item_link']
     item_type = request.form['item_type']
@@ -146,6 +164,7 @@ def submit():
 @app.route('/api/reload-data', methods=['GET', 'POST'])
 def api_reload_data():
     """API endpoint for Vercel Cron Jobs to reload data"""
+    initialize_app()  # Ensure app is initialized
     try:
         reload_data()
         logger.info("Data reloaded via API endpoint")
@@ -153,6 +172,11 @@ def api_reload_data():
     except Exception as e:
         logger.error(f"Error reloading data via API: {e}")
         return {'status': 'error', 'message': str(e)}, 500
+
+@app.route('/api/health', methods=['GET'])
+def health_check():
+    """Simple health check endpoint"""
+    return {'status': 'ok', 'message': 'Server is running'}, 200
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
